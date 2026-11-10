@@ -91,18 +91,49 @@ end
 -- Flight detection
 --------------------------------------------------
 
-local function HandleFlightTakeoff()
-    if not CrusaderProcAlertDB.flightEnabled then
+-- local function HandleFlightTakeoff()
+--     if not CrusaderProcAlertDB.flightEnabled then
+--         return
+--     end
+
+--     if UnitOnTaxi("player") and not flightAlertPlayed then
+
+--         flightAlertPlayed = true
+
+--         PlayAlertSound(FLIGHT_SOUND)
+--     end
+-- end
+
+local wasOnTaxi = false
+
+local flightFrame = CreateFrame("Frame")
+
+flightFrame:SetScript("OnUpdate", function(self, elapsed)
+
+    self.elapsed = (self.elapsed or 0) + elapsed
+
+    if self.elapsed < 0.2 then
         return
     end
 
-    if UnitOnTaxi("player") and not flightAlertPlayed then
+    self.elapsed = 0
 
-        flightAlertPlayed = true
+    local onTaxi = UnitOnTaxi("player")
 
-        PlayAlertSound(FLIGHT_SOUND)
+    -- Detect takeoff
+    if onTaxi and not wasOnTaxi then
+
+        if CrusaderProcAlertDB.flightEnabled then
+            PlayAlertSound(FLIGHT_SOUND)
+            print("|cff00ff00CPA: Flight started!|r")
+        end
+
     end
-end
+
+    -- Remember current state
+    wasOnTaxi = onTaxi
+
+end)
 
 --------------------------------------------------
 -- Event handling
@@ -110,8 +141,7 @@ end
 
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("UNIT_AURA")
-frame:RegisterEvent("PLAYER_CONTROL_LOST")
-frame:RegisterEvent("PLAYER_CONTROL_GAINED")
+
 
 frame:SetScript("OnEvent", function(self, event, ...)
 
