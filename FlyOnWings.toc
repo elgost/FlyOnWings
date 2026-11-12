@@ -1,7 +1,7 @@
 ## Interface: 16001
-## Title: Crusader proc alert
-## Notes: Plays Olsen brothers when starting a flight in WoW forever and Crusader when crusader procs.
+## Title: Fly on wigs alert
+## Notes: Plays "Olsen brothers - Fly on the wings of love" when starting a flight in WoW forever and Saxon - Crusader when the crusader weapon enchant procs.
 ## Author: You
-## Version: 1.0
+## Version: 1.0.1
 
 FlyOnWings.lua

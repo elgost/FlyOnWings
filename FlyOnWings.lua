@@ -40,29 +40,42 @@ local function PlayAlertSound(soundFile)
     PlaySoundFile(soundFile, "Master")
 end
 
+
 local function HasCrusaderBuff()
-    if not C_UnitAuras then
-        return false
+    -- Forever can restrict aura access during combat.
+    if C_Secrets and C_Secrets.ShouldAurasBeSecret then
+        local ok, shouldBeSecret = pcall(
+            C_Secrets.ShouldAurasBeSecret
+        )
+
+        if not ok or shouldBeSecret then
+            return nil -- Aura state is currently unknown
+        end
     end
 
-    local index = 1
-
-    while true do
-        local aura = C_UnitAuras.GetAuraDataByIndex(
+    for index = 1, 40 do
+        local ok, aura = pcall(
+            C_UnitAuras.GetAuraDataByIndex,
             "player",
             index,
             "HELPFUL"
         )
 
+        if not ok then
+            return nil
+        end
+
         if not aura then
             break
+        end
+
+        if issecretvalue and issecretvalue(aura.spellId) then
+            return nil
         end
 
         if aura.spellId == CRUSADER_SPELL_ID then
             return true
         end
-
-        index = index + 1
     end
 
     return false
@@ -76,14 +89,16 @@ local function UpdateCrusaderState(playSound)
     local found = HasCrusaderBuff()
 
     -- Trigger only when the buff changes from absent to present.
-    if found and not crusaderActive then
+    if found ~= nil then
+        if found and not crusaderActive then
 
-        if playSound and CrusaderProcAlertDB.crusaderEnabled then
-            PlayAlertSound(CRUSADER_SOUND)
+            if playSound and CrusaderProcAlertDB.crusaderEnabled then
+                PlayAlertSound(CRUSADER_SOUND)
+            end
+
         end
-
+        
     end
-
     crusaderActive = found
 end
 
@@ -157,7 +172,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- is already active when the addon loads.
         UpdateCrusaderState(false)
 
-        print("|cff00ff00Crusader Proc Alert loaded.|r")
+        print("|cff00ff00Fly on wings loaded.|r")
 
     elseif event == "UNIT_AURA" then
 
@@ -185,7 +200,7 @@ end)
 --------------------------------------------------
 
 local panel = CreateFrame("Frame")
-panel.name = "Crusader Proc Alert"
+panel.name = "Fly on wings"
 
 local title = panel:CreateFontString(
     nil,
@@ -194,7 +209,7 @@ local title = panel:CreateFontString(
 )
 
 title:SetPoint("TOPLEFT", 16, -16)
-title:SetText("Crusader Proc Alert")
+title:SetText("Fly on wings")
 
 local description = panel:CreateFontString(
     nil,
@@ -203,7 +218,7 @@ local description = panel:CreateFontString(
 )
 
 description:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
-description:SetText("Configure your sound alerts.")
+description:SetText("Fly on wings.")
 
 --------------------------------------------------
 -- Checkbox helper
@@ -272,7 +287,7 @@ CreateCheckbox(
 
 local category = Settings.RegisterCanvasLayoutCategory(
     panel,
-    "Crusader Proc Alert"
+    "Fly on wings"
 )
 
 Settings.RegisterAddOnCategory(category)
@@ -281,7 +296,7 @@ Settings.RegisterAddOnCategory(category)
 -- Slash commands
 --------------------------------------------------
 
-SLASH_CRUSADERPROC1 = "/cpa"
+SLASH_CRUSADERPROC1 = "/fow"
 
 SlashCmdList["CRUSADERPROC"] = function(msg)
 
@@ -300,21 +315,21 @@ SlashCmdList["CRUSADERPROC"] = function(msg)
         CrusaderProcAlertDB.crusaderEnabled = true
         CrusaderProcAlertDB.flightEnabled = true
 
-        print("Crusader Proc Alert: all alerts enabled.")
+        print("Event sounds: all alerts enabled.")
 
     elseif msg == "off" then
 
         CrusaderProcAlertDB.crusaderEnabled = false
         CrusaderProcAlertDB.flightEnabled = false
 
-        print("Crusader Proc Alert: all alerts disabled.")
+        print("Fly on wings: all alerts disabled.")
 
     else
 
-        print("/cpa crusader - Test Crusader sound")
-        print("/cpa flight - Test flight sound")
-        print("/cpa on - Enable alerts")
-        print("/cpa off - Disable alerts")
+        print("/fow crusader - Test Crusader sound")
+        print("/fow flight - Test flight sound")
+        print("/fow on - Enable alerts")
+        print("/fow off - Disable alerts")
 
     end
 
