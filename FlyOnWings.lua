@@ -3,6 +3,11 @@ local ADDON_NAME = ...
 
 local CRUSADER_SPELL_ID = 20007
 
+local WALK_ON_AIR_SPELL_ID = 1259416
+
+local WALK_ON_AIR_SOUND =
+    "Interface\\AddOns\\FlyOnWings\\walkonair.mp3"
+
 local CRUSADER_SOUND =
     "Interface\\AddOns\\FlyOnWings\\crusader.mp3"
 
@@ -156,6 +161,7 @@ end)
 
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("UNIT_AURA")
+frame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 
 
 frame:SetScript("OnEvent", function(self, event, ...)
@@ -167,30 +173,29 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if loadedAddon ~= ADDON_NAME then
             return
         end
-
         -- Initialize without playing a sound if the buff
         -- is already active when the addon loads.
         UpdateCrusaderState(false)
-
         print("|cff00ff00Fly on wings loaded.|r")
-
     elseif event == "UNIT_AURA" then
-
         local unit = ...
 
         if unit == "player" then
             UpdateCrusaderState(true)
         end
-
     elseif event == "PLAYER_CONTROL_LOST" then
-
         HandleFlightTakeoff()
-
     elseif event == "PLAYER_CONTROL_GAINED" then
 
         -- Reset the flight alert after landing.
         flightAlertPlayed = false
 
+    elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+        local unit, castGUID, spellID = ...
+
+        if unit == "player" and spellID == WALK_ON_AIR_SPELL_ID then
+            PlayAlertSound(WALK_ON_AIR_SOUND)
+        end
     end
 
 end)
